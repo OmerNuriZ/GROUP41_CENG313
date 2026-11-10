@@ -96,6 +96,41 @@ class LogRidge:
 
 
 # --------------------------------------------------------------------------
+# B3: pretrained CNN özellikleri + Ridge
+# --------------------------------------------------------------------------
+def extract_cnn_features(df, root="data", batch_size=16, tile=448, device=None):
+    """ImageNet ön-eğitimli ResNet50 ile görüntü başına 2048 boyutlu özellik (fine-tune yok).
+
+    2000x1000 görüntü sol/sağ iki 1000x1000 kareye bölünür (EDA: küçültürken detay kaybolmasın),
+    her yarı tile x tile'a küçültülür, iki yarının özellikleri ortalanır.
+    torch/torchvision sadece bu fonksiyon çağrılınca import edilir.
+    """
+    import torch
+    import torchvision
+    from torchvision import transforms as T
+
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    weights = torchvision.models.ResNet50_Weights.IMAGENET1K_V2
+    net = torchvision.models.resnet50(weights=weights)
+    net.fc = torch.nn.Identity()
+    net = net.eval().to(device)
+    prep = T.Compose([T.Resize((tile, tile)), T.ToTensor(),
+                      T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+
+    feats, paths = [], list(df["image_path"])
+    with torch.no_grad():
+        for i in range(0, len(paths), batch_size):
+            halves = []
+            for p in paths[i:i + batch_size]:
+                im = Image.open(f"{root}/{p}").convert("RGB")
+                w, h = im.size
+                halves += [prep(im.crop((0, 0, w // 2, h))), prep(im.crop((w // 2, 0, w, h)))]
+            out = net(torch.stack(halves).to(device)).cpu().numpy()
+            feats.append(out.reshape(-1, 2, out.shape[-1]).mean(1))
+    return pd.DataFrame(np.vstack(feats), index=df.index)
+
+
+# --------------------------------------------------------------------------
 # Çapraz doğrulama
 # --------------------------------------------------------------------------
 def cross_validate(make_model, X, df, fold_col="fold", targets=TARGETS):
