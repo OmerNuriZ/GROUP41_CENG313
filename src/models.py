@@ -1,4 +1,9 @@
 import numpy as np
+import pandas as pd
+from PIL import Image
+from sklearn.linear_model import Ridge
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 from data import TARGETS
 from utils import weighted_r2
@@ -16,6 +21,50 @@ class MeanBaseline:
 
     def predict(self, X):
         return np.tile(self.mean_, (len(X), 1))
+
+
+# --------------------------------------------------------------------------
+# B2: renk / örtü özellikleri + Ridge
+# --------------------------------------------------------------------------
+COLOR_FEATURE_NAMES = [
+    "r_mean", "g_mean", "b_mean", "r_std", "g_std", "b_std",
+    "yesillik", "exg", "ortu", "h_mean", "s_mean", "v_mean", "h_std", "s_std", "v_std",
+]
+
+
+def color_features(path, size=(200, 100)):
+    """Tek görüntüden renk ve örtü özellikleri (EDA'daki tanımlarla aynı)."""
+    im = Image.open(path).convert("RGB").resize(size)
+    rgb = np.asarray(im, dtype=float) / 255
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    toplam = r.mean() + g.mean() + b.mean() + 1e-9
+    yesillik = g.mean() / toplam
+    exg = (2 * g - r - b).mean()                 # excess green
+    ortu = ((g > r) & (g > b)).mean()            # yeşil piksel oranı
+    hsv = np.asarray(im.convert("HSV"), dtype=float).reshape(-1, 3) / 255
+    return [r.mean(), g.mean(), b.mean(), r.std(), g.std(), b.std(),
+            yesillik, exg, ortu, *hsv.mean(0), *hsv.std(0)]
+
+
+def extract_color_features(df, root="data"):
+    return pd.DataFrame([color_features(f"{root}/{p}") for p in df["image_path"]],
+                        columns=COLOR_FEATURE_NAMES, index=df.index)
+
+
+class LogRidge:
+    """log1p ölçeğinde StandardScaler + Ridge.
+    Tahmin expm1 ile grama döner, negatifler 0'a kırpılır."""
+
+    def __init__(self, alpha=1.0):
+        self.alpha = alpha
+
+    def fit(self, X, Y):
+        Y = np.asarray(Y, dtype=float)
+        self.model_ = make_pipeline(StandardScaler(), Ridge(alpha=self.alpha)).fit(X, np.log1p(Y))
+        return self
+
+    def predict(self, X):
+        return np.clip(np.expm1(self.model_.predict(X)), 0, None)
 
 
 # --------------------------------------------------------------------------
