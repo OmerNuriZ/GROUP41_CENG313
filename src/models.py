@@ -8,6 +8,19 @@ from sklearn.preprocessing import StandardScaler
 from data import TARGETS
 from utils import weighted_r2
 
+# Bağımsız 3 hedef. GDM = Green + Clover, Total = Green + Dead + Clover
+BASE_TARGETS = ["Dry_Green_g", "Dry_Dead_g", "Dry_Clover_g"]
+BASE_IDX = [TARGETS.index(t) for t in BASE_TARGETS]
+
+
+def derive_from_base(base):
+    """(n, 3) [Green, Dead, Clover] -> (n, 5) TARGETS sırasında, GDM ve Total toplamdan."""
+    base = np.asarray(base, dtype=float)
+    g, d, c = base[:, 0], base[:, 1], base[:, 2]
+    out = {"Dry_Green_g": g, "Dry_Dead_g": d, "Dry_Clover_g": c,
+           "GDM_g": g + c, "Dry_Total_g": g + d + c}
+    return np.column_stack([out[t] for t in TARGETS])
+
 
 # --------------------------------------------------------------------------
 # B0: her hedef için eğitim ortalaması
@@ -53,18 +66,33 @@ def extract_color_features(df, root="data"):
 
 class LogRidge:
     """log1p ölçeğinde StandardScaler + Ridge.
-    Tahmin expm1 ile grama döner, negatifler 0'a kırpılır."""
+    Tahmin expm1 ile grama döner, negatifler 0'a kırpılır.
 
-    def __init__(self, alpha=1.0):
+    derive=True: sadece Green, Dead, Clover öğrenilir; GDM ve Total toplamdan türetilir.
+    Bu durumda da fit 5 hedefli Y alır, predict 5 kolon (TARGETS sırasında) döner.
+    log=False: log1p dönüşümü yapılmaz, doğrudan gram ölçeğinde öğrenilir.
+    """
+
+    def __init__(self, alpha=1.0, derive=False, log=True):
         self.alpha = alpha
+        self.derive = derive
+        self.log = log
 
     def fit(self, X, Y):
         Y = np.asarray(Y, dtype=float)
-        self.model_ = make_pipeline(StandardScaler(), Ridge(alpha=self.alpha)).fit(X, np.log1p(Y))
+        if self.derive:
+            Y = Y[:, BASE_IDX]
+        if self.log:
+            Y = np.log1p(Y)
+        self.model_ = make_pipeline(StandardScaler(), Ridge(alpha=self.alpha)).fit(X, Y)
         return self
 
     def predict(self, X):
-        return np.clip(np.expm1(self.model_.predict(X)), 0, None)
+        p = self.model_.predict(X)
+        if self.log:
+            p = np.expm1(p)
+        p = np.clip(p, 0, None)
+        return derive_from_base(p) if self.derive else p
 
 
 # --------------------------------------------------------------------------
