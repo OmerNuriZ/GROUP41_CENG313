@@ -60,6 +60,23 @@ B3'ün hedef bazında R²'si: Green 0.37, Dead 0.24, Clover 0.33, GDM 0.36, Tota
 - Model tahminleri ortalamaya sıkıştırıyor. Total'i en yüksek %25 olan görüntüler hatanın %63'ü.
 - Üstten çekilen fotoğrafta hacim görünmüyor: yoğun çayırlar aynı görünüyor, uzun ama seyrek bitkiler (Phalaris, Lucerne) az tahmin ediliyor.
 
+## Submission Geçmişi
+| # | Tarih | Notebook | Model | CV weighted R² | Public LB |
+|---|-------|----------|-------|----------------|-----------|
+| 1 | 11.11.2026 | `kaggle_submission.ipynb` (Kaggle V2) | B3: ResNet50 + Ridge, gram, alpha=1000 | 0.531 | 0.35464 |
+
+**CV ile LB farkı:** CV 0.531, Public LB 0.355. Farkı anlamak için B3'ü farklı CV düzenleriyle tekrar değerlendirdik:
+
+| CV düzeni | B3 | B0 |
+|-----------|-----|-----|
+| State + tarih GroupKFold (kullandığımız) | 0.531 | 0.230 |
+| State bazlı (her fold'da 1 State hiç görülmemiş) | 0.373 | 0.089 |
+| Ay bazlı GroupKFold | 0.536 | 0.212 |
+
+Model hiç görmediği bir State'te test edilince skor LB'ye çok yakın çıkıyor (0.373 / 0.355). Ay bazlı bölmede düşüş yok.
+Yani fark zamandan değil konumdan geliyor: gizli test büyük ihtimalle eğitimdekinden farklı yerlerden ve bizim CV'miz aynı
+State'in başka tarihlerini eğitimde bıraktığı için iyimser. Assignment 2'de model seçimini State bazlı CV ile yapacağız.
+
 ## Nasıl Çalıştırılır
 1. Kaggle'da yarışma kurallarını kabul et ve Settings → API bölümünden token oluştur
 2. `assignment1_eda_baseline.ipynb` dosyasını Google Colab'da aç
@@ -78,3 +95,10 @@ B3'ün hedef bazında R²'si: Green 0.37, Dead 0.24, Clover 0.33, GDM 0.36, Tota
 ## İlerleme
 - 08.11.2026: Repo kuruldu, veri okuma ve pivot fonksiyonu eklendi
 - 08.11.2026: EDA tamamlandı: hedef dağılımları, metadata, görüntü, mevsim, örtü oranı, sol/sağ analizi
+- 10.11.2026: Ağırlıklı R² metriği ve 5-fold GroupKFold (State + tarih) eklendi, `folds.csv` oluşturuldu
+- 10.11.2026: Baseline modeller: B0 ortalama (0.230), B2 renk özellikleri + Ridge (0.336)
+- 10.11.2026: Deneyler: Random KFold skoru +0.046 şişiriyor; 3 hedef + toplam log1p'de çöküyor, gram ölçeği daha iyi
+- 10.11.2026: B3 pretrained ResNet50 özellikleri + Ridge (0.531, en iyi model)
+- 11.11.2026: Hata analizi: model yüksek biomass'ı az tahmin ediyor, en kötü tahminler NSW'de
+- 11.11.2026: Kaggle submission notebook'u ve ilk submit (B3, Public LB 0.35464)
+- 11.11.2026: README'ye sonuçlar ve submission geçmişi eklendi; CV-LB farkının konumdan geldiği bulundu
