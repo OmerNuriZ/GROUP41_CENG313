@@ -46,12 +46,16 @@ Ayrıntılar notebook'un 10-15. bölümlerinde.
 | B3 | ResNet50 özellikleri (2048) + Ridge | log1p | 1000 | 0.519 | 0.041 |
 | **B3** | **ResNet50 özellikleri (2048) + Ridge** | **gram** | **1000** | **0.531** | **0.084** |
 
-B3'ün hedef bazında R²'si: Green 0.37, Dead 0.24, Clover 0.33, GDM 0.36, Total 0.40.
+B3'ün hedef bazında R²'si: Green 0.366, Dead 0.235, Clover 0.325, GDM 0.355, Total 0.402.
+
+Ağırlıklı R² hedef bazındaki R²'lerden yüksek, çünkü metrik 5 hedefi tek havuzda, tek bir genel ortalamaya göre
+değerlendiriyor. Hedef ortalamaları çok farklı olduğu için (Total ~45 g, Clover ~7 g) hiçbir şey öğrenmeyen B0 bile
+0.230 alıyor; hedef bazında R²'leri ise ~0. Modellerin gerçek referans noktası 0 değil, bu 0.230.
 
 ### Deneyler
 | Deney | Sonuç |
 |-------|-------|
-| Random KFold vs GroupKFold (B2) | Random KFold 0.382 ± 0.007 (5 seed), GroupKFold 0.336. Random KFold skoru +0.046 şişiriyor. B0'da fark yok (0.230 / 0.231), yani fark modelin aynı yer/tarihi tanımasından geliyor. |
+| Random KFold vs GroupKFold (B2, log1p) | Random KFold 0.382 ± 0.007 (5 seed), GroupKFold 0.336. Random KFold skoru +0.046 şişiriyor. B0'da fark yok (0.230 / 0.231), yani fark modelin aynı yer/tarihi tanımasından geliyor. |
 | 3 hedef tahmin et, GDM ve Total'i topla | log1p ölçeğinde çok daha kötü (B2: 0.196 / 0.336, B3: 0.365 / 0.519). `expm1` ile geri dönen tahminler ortalamanın altında kalıyor ve toplamda birikiyor. Gram ölçeğinde direkt modelle eşit (B2: 0.380 / 0.381, B3: 0.528 / 0.531). |
 | log1p vs gram ölçeği | Gram ölçeği iki modelde de daha iyi. Metrik gram cinsinden kare hata ölçtüğü için yüksek biomass'lı örnekleri iyi tahmin etmek önemli. |
 
@@ -87,7 +91,7 @@ Kod: notebook Bölüm 15.
 
 ## Dosya Yapısı
 - `assignment1_eda_baseline.ipynb`: EDA (bölüm 1-9), baseline modeller, deneyler ve hata analizi (bölüm 10-14), CV ile LB karşılaştırması (bölüm 15)
-- `kaggle_submission.ipynb`: Kaggle'da çalışan submission notebook'u (B3)
+- `kaggle_submission.ipynb`: Kaggle'da çalışan submission notebook'u (B3). Kaggle'da internet kapalı olduğu için repo klonlanamıyor; bu yüzden `src/models.py`'deki özellik fonksiyonlarının birebir kopyasını içeriyor
 - `folds.csv`: 5-fold GroupKFold atamaları (`image_path`, `fold`)
 - `src/data.py`: veri okuma, GroupKFold (State + tarih), Random KFold, State bazlı ve ay bazlı fold'lar
 - `src/models.py`: B0, B2, B3 modelleri ve çapraz doğrulama
