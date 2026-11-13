@@ -36,7 +36,7 @@ Amaç: Mera fotoğraflarından 5 biomass değerini (gram) tahmin etmek.
 
 ## Sonuçlar
 5-fold GroupKFold (grup = State + Sampling_Date), out-of-fold tahminler üzerinde global ağırlıklı R².
-Ayrıntılar notebook'un 10-15. bölümlerinde.
+Ayrıntılar notebook'un 10-15. bölümlerinde, özet Bölüm 16'da.
 
 | Model | Özellikler | Hedef ölçeği | alpha | CV weighted R² | Fold std |
 |-------|-----------|--------------|-------|----------------|----------|
@@ -90,7 +90,7 @@ Kod: notebook Bölüm 15.
 5. Çalışma zamanı → Tümünü çalıştır (veri yaklaşık 1 GB, otomatik indiriliyor)
 
 ## Dosya Yapısı
-- `assignment1_eda_baseline.ipynb`: EDA (bölüm 1-9), baseline modeller, deneyler ve hata analizi (bölüm 10-14), CV ile LB karşılaştırması (bölüm 15)
+- `assignment1_eda_baseline.ipynb`: EDA (bölüm 1-9), baseline modeller, deneyler ve hata analizi (bölüm 10-14), CV ile LB karşılaştırması (bölüm 15), sonuç (bölüm 16)
 - `kaggle_submission.ipynb`: Kaggle'da çalışan submission notebook'u (B3). Kaggle'da internet kapalı olduğu için repo klonlanamıyor; bu yüzden `src/models.py`'deki özellik fonksiyonlarının birebir kopyasını içeriyor
 - `folds.csv`: 5-fold GroupKFold atamaları (`image_path`, `fold`)
 - `src/data.py`: veri okuma, GroupKFold (State + tarih), Random KFold, State bazlı ve ay bazlı fold'lar
@@ -108,3 +108,4 @@ Kod: notebook Bölüm 15.
 - 11.11.2026: Kaggle submission notebook'u ve ilk submit (B3, Public LB 0.35464)
 - 11.11.2026: README'ye sonuçlar ve submission geçmişi eklendi; CV-LB farkının konumdan geldiği bulundu
 - 13.11.2026: Notebook Bölüm 15: State bazlı ve ay bazlı CV ile LB karşılaştırması (State bazlı B3 0.373, LB 0.355)
+- 13.11.2026: Notebook'a Sonuç bölümü (16) eklendi; log1p kararının neden revize edildiği açıklandı
