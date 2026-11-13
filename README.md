@@ -1,5 +1,7 @@
 # GROUP41 - CENG313 Introduction to Data Science
 
+**Grup ID:** 41
+
 ## Proje
 Kaggle yarışması: [CSIRO - Image2Biomass Prediction](https://www.kaggle.com/competitions/csiro-biomass)
 
@@ -29,10 +31,11 @@ Amaç: Mera fotoğraflarından 5 biomass değerini (gram) tahmin etmek.
 - En zor hedefler Clover ve Dead
 
 ## Yaklaşım
-1. EDA: veri kalitesi, hedef dağılımları, metadata, görüntü, mevsim, örtü oranı ve sol/sağ analizi
-2. Baseline modeller: ortalama, renk özellikleri + Ridge, pretrained CNN özellikleri + Ridge
-3. Değerlendirme: 5-fold GroupKFold CV, ağırlıklı R²
-4. Assignment 2: kendi çözümümüz
+1. EDA: veri kalitesi, aykırı değerler, hedef dağılımları, metadata, görüntü, mevsim, örtü oranı ve sol/sağ analizi
+2. Ön işleme: veriyi görüntü başına tek satıra çevirme, görüntü boyutlandırma, StandardScaler
+3. Baseline modeller: ortalama, renk özellikleri + Ridge, pretrained CNN özellikleri + Ridge
+4. Değerlendirme: 5-fold GroupKFold CV, ağırlıklı R²
+5. Assignment 2: kendi çözümümüz
 
 ## Sonuçlar
 5-fold GroupKFold (grup = State + Sampling_Date), out-of-fold tahminler üzerinde global ağırlıklı R².
@@ -65,11 +68,13 @@ değerlendiriyor. Hedef ortalamaları çok farklı olduğu için (Total ~45 g, C
 - Üstten çekilen fotoğrafta hacim görünmüyor: yoğun çayırlar aynı görünüyor, uzun ama seyrek bitkiler (Phalaris, Lucerne) az tahmin ediliyor.
 
 ## Submission Geçmişi
-| # | Tarih | Notebook | Model | CV weighted R² | Public LB |
-|---|-------|----------|-------|----------------|-----------|
-| 1 | 11.11.2026 | `kaggle_submission.ipynb` (Kaggle V2) | B3: ResNet50 + Ridge, gram, alpha=1000 | 0.531 | 0.35464 |
+Yarışma kapalı olduğu için late submission yapıldı. Skor ekran görüntüsü `submissions/` klasöründe.
 
-**CV ile LB farkı:** CV 0.531, Public LB 0.355. Farkı anlamak için B3'ü farklı CV düzenleriyle tekrar değerlendirdik:
+| # | Tarih | Notebook | Model | CV weighted R² | Public LB | Private LB |
+|---|-------|----------|-------|----------------|-----------|------------|
+| 1 | 11.11.2026 | `kaggle_submission.ipynb` (Kaggle V2) | B3: ResNet50 + Ridge, gram, alpha=1000 | 0.531 | 0.43504 | 0.35464 |
+
+**CV ile LB farkı:** CV 0.531, Public LB 0.435, Private LB 0.355. Private skor gizli testin büyük kısmında ölçüldüğü için daha güvenilir. Farkı anlamak için B3'ü farklı CV düzenleriyle tekrar değerlendirdik:
 
 | CV düzeni | B3 | B0 |
 |-----------|-----|-----|
@@ -77,10 +82,17 @@ değerlendiriyor. Hedef ortalamaları çok farklı olduğu için (Total ~45 g, C
 | State bazlı (her fold'da 1 State hiç görülmemiş) | 0.373 | 0.089 |
 | Ay bazlı GroupKFold | 0.536 | 0.212 |
 
-Model hiç görmediği bir State'te test edilince skor LB'ye çok yakın çıkıyor (0.373 / 0.355). Ay bazlı bölmede düşüş yok.
+Model hiç görmediği bir State'te test edilince skor Private LB'ye çok yakın çıkıyor (0.373 / 0.355). Ay bazlı bölmede düşüş yok.
 Yani fark zamandan değil konumdan geliyor: gizli test büyük ihtimalle eğitimdekinden farklı yerlerden ve bizim CV'miz aynı
 State'in başka tarihlerini eğitimde bıraktığı için iyimser. Assignment 2'de model seçimini State bazlı CV ile yapacağız.
 Kod: notebook Bölüm 15.
+
+## Veri Nasıl İndirilir
+Veri repo'ya eklenmiyor. Kaggle kuralları ve dosya boyutu nedeniyle `data/` klasörü `.gitignore`'da.
+1. Kaggle'da yarışma sayfasına gir ve kuralları kabul et
+2. Kaggle → Settings → API bölümünden token oluştur
+3. Notebook'un ilk hücreleri veriyi Kaggle API ile `data/` klasörüne otomatik indiriyor:
+   `kaggle competitions download -c csiro-biomass -p data`
 
 ## Nasıl Çalıştırılır
 1. Kaggle'da yarışma kurallarını kabul et ve Settings → API bölümünden token oluştur
@@ -90,12 +102,15 @@ Kod: notebook Bölüm 15.
 5. Çalışma zamanı → Tümünü çalıştır (veri yaklaşık 1 GB, otomatik indiriliyor)
 
 ## Dosya Yapısı
-- `assignment1_eda_baseline.ipynb`: EDA (bölüm 1-9), baseline modeller, deneyler ve hata analizi (bölüm 10-14), CV ile LB karşılaştırması (bölüm 15), sonuç (bölüm 16)
+- `assignment1_eda_baseline.ipynb`: problem tanımı (giriş), veri genel bakışı (bölüm 1), EDA (bölüm 2-9), ön işleme (bölüm 9.1), baseline modeller, deneyler ve hata analizi (bölüm 10-14), Kaggle submission ve CV ile LB karşılaştırması (bölüm 15), sonuç (bölüm 16)
 - `kaggle_submission.ipynb`: Kaggle'da çalışan submission notebook'u (B3). Kaggle'da internet kapalı olduğu için repo klonlanamıyor; bu yüzden `src/models.py`'deki özellik fonksiyonlarının birebir kopyasını içeriyor
 - `folds.csv`: 5-fold GroupKFold atamaları (`image_path`, `fold`)
 - `src/data.py`: veri okuma, GroupKFold (State + tarih), Random KFold, State bazlı ve ay bazlı fold'lar
 - `src/models.py`: B0, B2, B3 modelleri ve çapraz doğrulama
 - `src/utils.py`: global ağırlıklı R² metriği
+- `src/__init__.py`: boş dosya, `src` klasörünü paket yapar
+- `requirements.txt`: kullanılan Python paketleri
+- `submissions/`: Kaggle skor ekran görüntüleri
 
 ## İlerleme
 - 08.11.2026: Repo kuruldu, veri okuma ve pivot fonksiyonu eklendi
@@ -105,7 +120,8 @@ Kod: notebook Bölüm 15.
 - 10.11.2026: Deneyler: Random KFold skoru +0.046 şişiriyor; 3 hedef + toplam log1p'de çöküyor, gram ölçeği daha iyi
 - 10.11.2026: B3 pretrained ResNet50 özellikleri + Ridge (0.531, en iyi model)
 - 11.11.2026: Hata analizi: model yüksek biomass'ı az tahmin ediyor, en kötü tahminler NSW'de
-- 11.11.2026: Kaggle submission notebook'u ve ilk submit (B3, Public LB 0.35464)
+- 11.11.2026: Kaggle submission notebook'u ve ilk submit (B3, Public LB 0.43504, Private LB 0.35464)
 - 11.11.2026: README'ye sonuçlar ve submission geçmişi eklendi; CV-LB farkının konumdan geldiği bulundu
-- 13.11.2026: Notebook Bölüm 15: State bazlı ve ay bazlı CV ile LB karşılaştırması (State bazlı B3 0.373, LB 0.355)
+- 13.11.2026: Notebook Bölüm 15: State bazlı ve ay bazlı CV ile LB karşılaştırması (State bazlı B3 0.373, Private LB 0.355)
 - 13.11.2026: Notebook'a Sonuç bölümü (16) eklendi; log1p kararının neden revize edildiği açıklandı
+- 13.11.2026: Notebook bölüm yapısı ve README düzenlendi
