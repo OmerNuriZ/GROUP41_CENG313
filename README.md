@@ -36,7 +36,7 @@ Amaç: Mera fotoğraflarından 5 biomass değerini (gram) tahmin etmek.
 
 ## Sonuçlar
 5-fold GroupKFold (grup = State + Sampling_Date), out-of-fold tahminler üzerinde global ağırlıklı R².
-Ayrıntılar notebook'un 10-14. bölümlerinde.
+Ayrıntılar notebook'un 10-15. bölümlerinde.
 
 | Model | Özellikler | Hedef ölçeği | alpha | CV weighted R² | Fold std |
 |-------|-----------|--------------|-------|----------------|----------|
@@ -76,6 +76,7 @@ B3'ün hedef bazında R²'si: Green 0.37, Dead 0.24, Clover 0.33, GDM 0.36, Tota
 Model hiç görmediği bir State'te test edilince skor LB'ye çok yakın çıkıyor (0.373 / 0.355). Ay bazlı bölmede düşüş yok.
 Yani fark zamandan değil konumdan geliyor: gizli test büyük ihtimalle eğitimdekinden farklı yerlerden ve bizim CV'miz aynı
 State'in başka tarihlerini eğitimde bıraktığı için iyimser. Assignment 2'de model seçimini State bazlı CV ile yapacağız.
+Kod: notebook Bölüm 15.
 
 ## Nasıl Çalıştırılır
 1. Kaggle'da yarışma kurallarını kabul et ve Settings → API bölümünden token oluştur
@@ -85,10 +86,10 @@ State'in başka tarihlerini eğitimde bıraktığı için iyimser. Assignment 2'
 5. Çalışma zamanı → Tümünü çalıştır (veri yaklaşık 1 GB, otomatik indiriliyor)
 
 ## Dosya Yapısı
-- `assignment1_eda_baseline.ipynb`: EDA (bölüm 1-9), baseline modeller, deneyler ve hata analizi (bölüm 10-14)
+- `assignment1_eda_baseline.ipynb`: EDA (bölüm 1-9), baseline modeller, deneyler ve hata analizi (bölüm 10-14), CV ile LB karşılaştırması (bölüm 15)
 - `kaggle_submission.ipynb`: Kaggle'da çalışan submission notebook'u (B3)
 - `folds.csv`: 5-fold GroupKFold atamaları (`image_path`, `fold`)
-- `src/data.py`: veri okuma, GroupKFold ve Random KFold fold'ları
+- `src/data.py`: veri okuma, GroupKFold (State + tarih), Random KFold, State bazlı ve ay bazlı fold'lar
 - `src/models.py`: B0, B2, B3 modelleri ve çapraz doğrulama
 - `src/utils.py`: global ağırlıklı R² metriği
 
@@ -102,3 +103,4 @@ State'in başka tarihlerini eğitimde bıraktığı için iyimser. Assignment 2'
 - 11.11.2026: Hata analizi: model yüksek biomass'ı az tahmin ediyor, en kötü tahminler NSW'de
 - 11.11.2026: Kaggle submission notebook'u ve ilk submit (B3, Public LB 0.35464)
 - 11.11.2026: README'ye sonuçlar ve submission geçmişi eklendi; CV-LB farkının konumdan geldiği bulundu
+- 13.11.2026: Notebook Bölüm 15: State bazlı ve ay bazlı CV ile LB karşılaştırması (State bazlı B3 0.373, LB 0.355)

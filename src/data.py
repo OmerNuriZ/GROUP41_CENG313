@@ -1,5 +1,5 @@
 import pandas as pd
-from sklearn.model_selection import GroupKFold, KFold
+from sklearn.model_selection import GroupKFold, KFold, LeaveOneGroupOut
 
 TARGETS = ["Dry_Green_g", "Dry_Dead_g", "Dry_Clover_g", "GDM_g", "Dry_Total_g"]
 
@@ -54,5 +54,26 @@ def make_random_folds(df, n_splits=5, seed=42, col="fold_random"):
     df[col] = -1
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
     for k, (_, va) in enumerate(kf.split(df)):
+        df.iloc[va, df.columns.get_loc(col)] = k
+    return df
+
+
+def make_state_folds(df, col="fold_state"):
+    """Her fold'da bir State validation'da, model o State'i hiç görmüyor (LeaveOneGroupOut, 4 fold).
+    Yeni konumlara genellemeyi ölçmek için. df'ye `col` kolonu ekler, dosyaya yazmaz."""
+    df = df.copy()
+    df[col] = -1
+    for k, (_, va) in enumerate(LeaveOneGroupOut().split(df, groups=df["State"])):
+        df.iloc[va, df.columns.get_loc(col)] = k
+    return df
+
+
+def make_month_folds(df, n_splits=5, col="fold_month"):
+    """Grup = örnekleme yılı-ayı (ör. 2015-09). Aynı ayın görüntüleri aynı fold'da (GroupKFold).
+    Zamana genellemeyi ölçmek için. df'ye `col` kolonu ekler, dosyaya yazmaz."""
+    df = df.copy()
+    ay = pd.to_datetime(df["Sampling_Date"]).dt.to_period("M").astype(str)
+    df[col] = -1
+    for k, (_, va) in enumerate(GroupKFold(n_splits=n_splits).split(df, groups=ay)):
         df.iloc[va, df.columns.get_loc(col)] = k
     return df
